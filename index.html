@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Netlify Furniture Store</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { gold: '#c9a24d', darkbg: '#0f0f0f' }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-darkbg text-white">
+
+<!-- HEADER -->
+<header class="sticky top-0 z-50 bg-black/90 border-b border-gray-800">
+  <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+    <h1 id="storeTitle" class="text-2xl font-bold text-gold">My Furniture Store</h1>
+    <div class="flex gap-3">
+      <button onclick="toggleMenu()" class="text-3xl">☰</button>
+      <button id="settingsBtn" class="bg-gold text-black px-4 py-2 rounded">Settings</button>
+    </div>
+  </div>
+  <div id="mobileMenu" class="hidden bg-black p-4">
+    <ul id="mobileCategoryList"></ul>
+  </div>
+</header>
+
+<!-- SEARCH + CATEGORY -->
+<section class="max-w-7xl mx-auto px-6 py-4 border-b border-gray-800">
+  <input id="searchInput" placeholder="Search products" class="w-full p-3 mb-2 bg-black border" oninput="renderProducts()">
+  <select id="categoryDropdown" class="w-full p-3 mb-2 bg-black border" onchange="selectCategory()"></select>
+  <select id="subCategoryDropdown" class="w-full p-3 mb-2 bg-black border hidden" onchange="renderProducts()"></select>
+</section>
+
+<!-- HOME BANNER SLIDER -->
+<section class="max-w-7xl mx-auto px-6 py-10 text-center">
+  <div class="relative overflow-hidden rounded-xl mb-6">
+    <img id="bannerImg" class="w-full h-64 object-cover" />
+  </div>
+  <h2 id="homeTitle" class="text-4xl font-bold mb-3"></h2>
+  <p id="homeDesc" class="text-gray-400 mb-5"></p>
+  <a id="homeBtn" target="_blank" class="bg-gold text-black px-8 py-3 rounded-full">Order on WhatsApp</a>
+</section>
+
+<!-- PRODUCTS -->
+<section class="max-w-7xl mx-auto px-6 pb-20">
+  <div id="productGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+</section>
+
+<!-- CONTACT -->
+<section class="max-w-7xl mx-auto px-6 py-12 text-center">
+  <h3 class="text-3xl font-bold mb-4">Contact</h3>
+  <div id="contactDetails" class="text-gray-400"></div>
+</section>
+
+<!-- SETTINGS PANEL -->
+<div id="settingsPanel" class="hidden fixed inset-0 bg-black/95 z-50 overflow-auto">
+  <div class="max-w-3xl mx-auto p-6 relative">
+    <button onclick="closeSettings()" class="absolute left-4 top-4 text-3xl">←</button>
+    <h2 class="text-3xl font-bold mb-6 text-center">Admin Settings</h2>
+
+    <input id="adminPassInput" placeholder="Admin Password" type="password" class="w-full p-2 mb-3 bg-black border">
+    <input id="setAdminPassInput" placeholder="Set / Change Password" type="password" class="w-full p-2 mb-4 bg-black border">
+
+    <h3 class="font-semibold mb-2">Store Settings</h3>
+    <input id="storeNameInput" placeholder="Store Name" class="w-full p-2 mb-2 bg-black border">
+    <input id="homeTitleInput" placeholder="Home Title" class="w-full p-2 mb-2 bg-black border">
+    <input id="homeDescInput" placeholder="Home Description" class="w-full p-2 mb-2 bg-black border">
+
+    <h3 class="font-semibold mt-4 mb-2">Banner Slider</h3>
+    <textarea id="bannerImagesInput" placeholder="Banner image URLs (comma separated)" class="w-full p-2 mb-2 bg-black border"></textarea>
+    <input id="bannerTimeInput" placeholder="Slide time (ms e.g. 3000)" class="w-full p-2 mb-4 bg-black border">
+
+    <h3 class="font-semibold mb-2">Contact Info</h3>
+    <input id="whatsappInput" placeholder="WhatsApp Number" class="w-full p-2 mb-2 bg-black border">
+    <input id="emailInput" placeholder="Email" class="w-full p-2 mb-2 bg-black border">
+    <input id="locationInput" placeholder="Location" class="w-full p-2 mb-4 bg-black border">
+
+    <h3 class="font-semibold mb-2">Categories</h3>
+    <textarea id="categoryInput" placeholder='{"Sofa":["Modern","Classic"],"Bed":["Wooden"]}' class="w-full p-2 mb-4 bg-black border"></textarea>
+
+    <h3 class="font-semibold mb-2">Add Product</h3>
+    <input id="pName" placeholder="Name" class="w-full p-2 mb-2 bg-black border">
+    <input id="pPrice" placeholder="Price" class="w-full p-2 mb-2 bg-black border">
+    <input id="pCat" placeholder="Category" class="w-full p-2 mb-2 bg-black border">
+    <input id="pSub" placeholder="Sub Category" class="w-full p-2 mb-2 bg-black border">
+    <textarea id="pImgs" placeholder="Image URLs (comma separated)" class="w-full p-2 mb-4 bg-black border"></textarea>
+
+    <div class="flex gap-4 justify-center">
+      <button onclick="saveSettings()" class="bg-gold text-black px-4 py-2 rounded">Save Settings</button>
+      <button onclick="saveProduct()" class="bg-green-600 px-4 py-2 rounded">Save Product</button>
+    </div>
+  </div>
+</div>
+
+<a id="waBtn" target="_blank" class="fixed bottom-6 right-6 bg-green-600 px-5 py-3 rounded-full">WhatsApp</a>
+
+<script>
+let state = JSON.parse(localStorage.getItem('store')) || { adminPass:'', storeName:'My Furniture Store', homeTitle:'Luxury Furniture', homeDesc:'Order on WhatsApp', banners:['https://images.unsplash.com/photo-1586023492125-27b2c045efd7'], bannerTime:3000, contact:{whatsapp:'', email:'', location:''}, categories:{}, products:[] };
+
+const settingsBtn = document.getElementById('settingsBtn');
+const settingsPanel = document.getElementById('settingsPanel');
+settingsBtn.onclick = () => { settingsPanel.classList.remove('hidden'); lock(); };
+function closeSettings(){ settingsPanel.classList.add('hidden'); }
+function lock(){ document.querySelectorAll('#settingsPanel input,textarea,button').forEach(e=>e.disabled=true); document.getElementById('adminPassInput').disabled=false; document.getElementById('setAdminPassInput').disabled=false; }
+
+document.getElementById('adminPassInput').oninput = e => { if(e.target.value===state.adminPass&&state.adminPass){ unlock(); fillSettings(); } };
+function unlock(){ document.querySelectorAll('#settingsPanel input,textarea,button').forEach(e=>e.disabled=false); }
+function fillSettings(){ storeNameInput.value=state.storeName; homeTitleInput.value=state.homeTitle; homeDescInput.value=state.homeDesc; bannerImagesInput.value=state.banners.join(','); bannerTimeInput.value=state.bannerTime; whatsappInput.value=state.contact.whatsapp; emailInput.value=state.contact.email; locationInput.value=state.contact.location; categoryInput.value=JSON.stringify(state.categories); }
+function saveSettings(){ if(setAdminPassInput.value) state.adminPass=setAdminPassInput.value; state.storeName=storeNameInput.value; state.homeTitle=homeTitleInput.value; state.homeDesc=homeDescInput.value; state.banners=bannerImagesInput.value.split(',').map(x=>x.trim()); state.bannerTime=parseInt(bannerTimeInput.value)||3000; state.contact={whatsapp:whatsappInput.value,email:emailInput.value,location:locationInput.value}; try{state.categories=JSON.parse(categoryInput.value);}catch{}; localStorage.setItem('store',JSON.stringify(state)); renderAll(); alert('Saved'); }
+function saveProduct(){ const imgs=pImgs.value.split(',').map(i=>i.trim()); imgs.forEach(img=>state.products.push({name:pName.value,price:pPrice.value,cat:pCat.value,sub:pSub.value,img})); localStorage.setItem('store',JSON.stringify(state)); renderProducts(); alert('Product added'); }
+
+function renderAll(){ renderHome(); renderCategories(); renderProducts(); }
+function renderHome(){ storeTitle.innerText=state.storeName; homeTitle.innerText=state.homeTitle; homeDesc.innerText=state.homeDesc; const wa=`https://wa.me/${state.contact.whatsapp}`; homeBtn.href=wa; waBtn.href=wa; contactDetails.innerHTML=`WhatsApp: ${state.contact.whatsapp}<br>Email: ${state.contact.email}<br>Location: ${state.contact.location}`; }
+let bannerIndex=0;
+function bannerSlider(){ bannerImg.src=state.banners[bannerIndex]; bannerIndex=(bannerIndex+1)%state.banners.length; }
+setInterval(bannerSlider,state.bannerTime);
+function renderCategories(){ categoryDropdown.innerHTML='<option value="">All Categories</option>'; for(let c in state.categories){ categoryDropdown.innerHTML+=`<option>${c}</option>`; } }
+function selectCategory(){ const cat=categoryDropdown.value; subCategoryDropdown.innerHTML='<option value="">All Sub</option>'; if(state.categories[cat]){ subCategoryDropdown.classList.remove('hidden'); state.categories[cat].forEach(s=>subCategoryDropdown.innerHTML+=`<option>${s}</option>`); } else subCategoryDropdown.classList.add('hidden'); renderProducts(); }
+function renderProducts(){ productGrid.innerHTML=''; const q=searchInput.value?.toLowerCase()||''; state.products.filter(p=>(!categoryDropdown.value||p.cat===categoryDropdown.value)&&(!subCategoryDropdown.value||p.sub===subCategoryDropdown.value)&&p.name.toLowerCase().includes(q)).forEach(p=>{ productGrid.innerHTML+=`<div class="border rounded-xl overflow-hidden"><img src="${p.img}" class="h-56 w-full object-cover"><div class="p-4"><h3 class="font-semibold">${p.name}</h3><p class="text-gold">${p.price}</p><a target="_blank" href="https://wa.me/${state.contact.whatsapp}?text=I%20want%20${p.name}" class="block mt-3 bg-gold text-black text-center py-2 rounded">Order</a></div></div>`; }); }
+
+renderAll(); bannerSlider();
+</script>
+</body>
+</html>
